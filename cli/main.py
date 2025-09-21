@@ -1,5 +1,8 @@
 from typing import Optional
 import datetime
+from dotenv import load_dotenv
+load_dotenv()
+
 import typer
 from pathlib import Path
 from functools import wraps
@@ -11,7 +14,6 @@ from rich.columns import Columns
 from rich.markdown import Markdown
 from rich.layout import Layout
 from rich.text import Text
-from rich.live import Live
 from rich.table import Table
 from collections import deque
 import time
@@ -24,6 +26,7 @@ from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.default_config import DEFAULT_CONFIG
 from cli.models import AnalystType
 from cli.utils import *
+from cli.report_compiler import compile_reports_to_pdf
 
 console = Console()
 
@@ -394,7 +397,7 @@ def update_display(layout, spinner_text=None):
 def get_user_selections():
     """Get all user selections before starting the analysis display."""
     # Display ASCII art welcome message
-    with open("./cli/static/welcome.txt", "r") as f:
+    with open("./cli/static/welcome.txt", "r", encoding="utf-8") as f:
         welcome_ascii = f.read()
 
     # Create welcome box content
@@ -764,7 +767,7 @@ def run_analysis():
             func(*args, **kwargs)
             timestamp, message_type, content = obj.messages[-1]
             content = content.replace("\n", " ")  # Replace newlines with spaces
-            with open(log_file, "a") as f:
+            with open(log_file, "a", encoding="utf-8") as f:
                 f.write(f"{timestamp} [{message_type}] {content}\n")
         return wrapper
     
@@ -775,7 +778,7 @@ def run_analysis():
             func(*args, **kwargs)
             timestamp, tool_name, args = obj.tool_calls[-1]
             args_str = ", ".join(f"{k}={v}" for k, v in args.items())
-            with open(log_file, "a") as f:
+            with open(log_file, "a", encoding="utf-8") as f:
                 f.write(f"{timestamp} [Tool Call] {tool_name}({args_str})\n")
         return wrapper
 
@@ -788,7 +791,7 @@ def run_analysis():
                 content = obj.report_sections[section_name]
                 if content:
                     file_name = f"{section_name}.md"
-                    with open(report_dir / file_name, "w") as f:
+                    with open(report_dir / file_name, "w", encoding="utf-8") as f:
                         f.write(content)
         return wrapper
 
@@ -1094,6 +1097,9 @@ def run_analysis():
         display_complete_report(final_state)
 
         update_display(layout)
+
+        #if typer.confirm("\nDeseja compilar os relatórios em um único arquivo PDF?", default=True):
+        compile_reports_to_pdf(selections["ticker"], selections["analysis_date"])
 
 
 @app.command()

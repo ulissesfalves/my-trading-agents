@@ -25,11 +25,20 @@ setup(
         "typer>=0.9.0",
         "rich>=13.0.0",
         "questionary>=2.0.1",
+
+        # --- New dependencies for the breakout scanner ---
+        "lightgbm",
+        "shap",
+        "scikit-learn",
+        "beautifulsoup4",
+        "matplotlib",
     ],
     python_requires=">=3.10",
     entry_points={
         "console_scripts": [
             "tradingagents=cli.main:app",
+            # New entry point for the breakout scanner
+            "tradingagents-breakout-scan=breakout_scanner.cli:main",
         ],
     },
     classifiers=[
